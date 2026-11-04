@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+.env.local
+*.pdf
+.DS_Store
+.next
+out
+next-env.d.ts
+tsconfig.tsbuildinfo
+tests/*.local.test.ts
+AGENTS.md

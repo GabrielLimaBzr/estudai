@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+/*
+ * Sistema de design do EstudAI — "mesa de estudo".
+ * – Tinta (escuro) e Papel (claro). Superfícies: paper (fundo) < sheet (folha) ; sunk (campos, trilhos).
+ * – Cor mora nas MATÉRIAS (cada uma tem a sua). O amarelo "marca-texto" é reservado a um único significado: AGORA
+ *   (bloco em andamento, coluna de hoje, cronômetro rodando).
+ * – Raios por hierarquia: 28 (cronômetro), 16 (folhas), 12 (controles), cápsula (chips).
+ */
+@theme inline {
+  --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-sunk: var(--sunk);
+  --color-rule: var(--rule);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
+  --color-ink3: var(--ink3);
+  --color-marker: var(--marker);
+  --color-on-marker: var(--on-marker);
+  --color-band: var(--band);
+  --color-on-band: var(--on-band);
+  --color-on-band2: var(--on-band2);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+}
+
+/* ---------- Tinta (escuro, padrão) ---------- */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: #0d1424;
+  --sheet: #141d33;
+  --sunk: #0a101e;
+  --rule: #26324f;
+  --ink: #eaeef9;
+  --ink2: #b0bad4;
+  --ink3: #8591ae;
+  --marker: #f5d547;
+  --on-marker: #1b1600;
+  --band: #1a2750;
+  --on-band: #f1f4fc;
+  --on-band2: #b7c2e3;
+  --ok: #3ccf9b;
+  --warn: #f0b23c;
+  --bad: #ff7b6e;
+  --shadow-sheet: none;
+  --shadow-float: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- Papel (claro) ---------- */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --paper: #eef1f8;
+  --sheet: #ffffff;
+  --sunk: #e3e8f2;
+  --rule: #d3dbe9;
+  --ink: #0f1830;
+  --ink2: #3d4a6b;
+  --ink3: #5f6c89;
+  --marker: #f5d547;
+  --on-marker: #1b1600;
+  --band: #0f1830;
+  --on-band: #f1f4fc;
+  --on-band2: #b7c2e3;
+  --ok: #0b7a5c;
+  --warn: #9a5b00;
+  --bad: #b93225;
+  --shadow-sheet: 0 1px 2px rgba(15, 24, 48, 0.06), 0 1px 1px rgba(15, 24, 48, 0.04);
+  --shadow-float: 0 24px 60px rgba(15, 24, 48, 0.22);
+}
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { @apply bg-paper font-sans text-ink antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+:where(a, button, input, select, textarea, summary, [role='tab'], [role='checkbox']):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .sheet { @apply rounded-2xl border border-rule bg-sheet; box-shadow: var(--shadow-sheet); }
+  .btn { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-paper transition-opacity hover:opacity-90 disabled:opacity-50; }
+  .btn-ghost { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-rule bg-transparent px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:bg-sunk disabled:opacity-50; }
+  .btn-quiet { @apply inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1 text-sm font-medium text-ink2 transition-colors hover:bg-sunk hover:text-ink disabled:opacity-40; }
+  /* 16px no celular: abaixo disso o iOS dá zoom ao focar o campo */
+  .input { @apply min-h-10 w-full rounded-xl border border-rule bg-sunk px-3 py-2 text-base text-ink placeholder:text-ink3 md:text-sm; }
+  .input:focus-visible { outline: 2px solid var(--ink); outline-offset: 0; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full border border-rule px-2.5 py-0.5 text-xs font-medium text-ink2; }
+  .seg { @apply inline-flex rounded-xl border border-rule bg-sunk p-0.5 text-sm; }
+  .seg > button { @apply min-h-8 rounded-[10px] px-3 font-medium text-ink2 transition-colors hover:text-ink; }
+  .seg > button[aria-selected='true'], .seg > button[aria-pressed='true'] { @apply bg-sheet text-ink; box-shadow: var(--shadow-sheet), 0 0 0 1px var(--rule); }
+}
+
+/* "Agora": o marca-texto. Único uso de amarelo no app. */
+.now { background: var(--marker); color: var(--on-marker); }
+.now .muted { color: var(--on-marker); opacity: 0.72; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+@keyframes pop-in { from { transform: translateY(14px) scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.pop-in { animation: pop-in 0.18s ease-out; }
+.fade-in { animation: fade-in 0.18s ease-out; }
