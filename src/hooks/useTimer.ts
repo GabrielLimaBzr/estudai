@@ -30,7 +30,7 @@ export function useTimer() {
   const pause = useCallback(() => setTimer((t) => pauseT(t, Date.now())), [])
   const reset = useCallback(() => setTimer((t) => ({ ...IDLE_TIMER, durationMin: t.durationMin, subjectId: t.subjectId })), [])
   /** Prepara e inicia uma sessão (usado pelo botão “Iniciar” de um bloco). */
-  const begin = useCallback((c: { durationMin: number; subjectId: string | null; blockId: string | null }) =>
+  const begin = useCallback((c: { durationMin: number; subjectId: string | null; blockId: string | null; sessionId?: string | null }) =>
     setTimer({ ...IDLE_TIMER, ...c, status: 'running', startedAt: Date.now() }), [])
 
   return { timer, configure, start, pause, reset, begin }

@@ -2,23 +2,24 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Check, ChevronRight, Pause, Play, Plus, RotateCcw, Square } from 'lucide-react'
-import { Dot, subjectColor, subjectName } from '@/components/ui'
+import { Dot, shortName, subjectColor, subjectName } from '@/components/ui'
 import type { ReadyApp } from '@/contexts/app'
+import { completeItem, completeSession, undoItem } from '@/hooks/agenda'
+import { agendaForDay, type AgendaItem } from '@/lib/agenda'
 import { WEEKDAYS_SHORT, daysBetween, fmtDuration, hhmm, parseYmd, shortDay, weekDays, weekdayIndex } from '@/lib/dates'
-import { GOAL_YEAR, blockMinutesDone, blocksOfDay, minutesByDay, minutesBySubject, nowPointer, progressPct, sumMinutes, urgentTasks, yearProgress } from '@/lib/study'
+import { GOAL_YEAR, daysToExam, minutesByDay, minutesBySubject, nowPointer, progressPct, sumMinutes, urgentTasks, yearProgress } from '@/lib/study'
 import { elapsedMs, fmtClock, isFinished, minutesToLog, remainingMs, timerFraction } from '@/lib/timer'
-import type { Block, Task } from '@/lib/types'
+import type { Task } from '@/lib/types'
 
-/** Tudo o que a Home precisa saber sobre o dia: blocos, o que já foi feito e qual é o atual/próximo. */
+/** Tudo o que a Home precisa saber sobre o dia: a agenda (blocos fixos e sessões do cronograma) e qual item é o atual/próximo. */
 export function todayPlan(app: ReadyApp) {
-  const { study, today, date, nowMin } = app
-  const blocks = blocksOfDay(study.blocks.rows, weekdayIndex(date))
-  const doneMin = (b: Block) => blockMinutesDone(b, today, study.logs.rows)
-  const pointer = nowPointer(blocks, nowMin, (b) => doneMin(b) > 0)
-  const suggested = blocks.find((b) => b.id === (pointer.current ?? pointer.next)) ?? null
+  const { study, today, nowMin } = app
+  const items = agendaForDay(today, study.blocks.rows, study.sessions.rows, study.logs.rows)
+  const pointer = nowPointer(items, nowMin, (i) => i.done)
+  const suggested = items.find((i) => i.id === (pointer.current ?? pointer.next)) ?? null
   return {
-    blocks, doneMin, pointer, suggested, isNow: suggested !== null && suggested.id === pointer.current,
-    planned: blocks.reduce((n, b) => n + b.minutes, 0),
+    items, pointer, suggested, isNow: suggested !== null && suggested.id === pointer.current,
+    planned: items.reduce((n, i) => n + i.minutes, 0),
     studied: sumMinutes(study.logs.rows.filter((l) => l.studied_on === today)),
   }
 }
@@ -36,6 +37,11 @@ function PanelTitle({ id, title, aside }: { id: string; title: string; aside?: R
 }
 
 /* ───────────────────────── Foco ───────────────────────── */
+/** Parâmetros do cronômetro para começar um item da agenda. */
+function beginArgs(i: AgendaItem) {
+  return { durationMin: i.minutes, subjectId: i.subject_id, blockId: i.kind === 'block' ? i.refId : null, sessionId: i.kind === 'session' ? i.refId : null }
+}
+
 export function FocusCard({ app, plan }: { app: ReadyApp; plan: TodayPlan }) {
   const { study, timer: api, now, today } = app
   const t = api.timer
@@ -50,11 +56,15 @@ export function FocusCard({ app, plan }: { app: ReadyApp; plan: TodayPlan }) {
   const subject = study.subjects.rows.find((s) => s.id === subjectId)
   const minutes = idle ? (showCustom || !suggested ? t.durationMin : suggested.minutes) : t.durationMin
   const clock = idle ? fmtClock(minutes * 60_000) : fmtClock(remainingMs(t, now))
-  const block = !idle ? plan.blocks.find((b) => b.id === t.blockId) : showCustom ? null : suggested
+  const item = !idle ? plan.items.find((i) => (t.sessionId ? i.refId === t.sessionId : t.blockId ? i.refId === t.blockId : false)) ?? null : showCustom ? null : suggested
 
   async function log() {
-    const row = await study.logs.insert({ subject_id: t.subjectId, block_id: t.blockId, studied_on: today, minutes: minutesToLog(t, Date.now()) }, 'registrar a sessão')
-    if (row) api.reset()
+    const minutes = minutesToLog(t, Date.now())
+    const session = t.sessionId ? study.sessions.rows.find((x) => x.id === t.sessionId) : undefined
+    const ok = session
+      ? await completeSession(study, session, today, minutes)
+      : !!(await study.logs.insert({ subject_id: t.subjectId, block_id: t.blockId, studied_on: today, minutes }, 'registrar a sessão'))
+    if (ok) api.reset()
   }
 
   const status = !idle
@@ -71,7 +81,7 @@ export function FocusCard({ app, plan }: { app: ReadyApp; plan: TodayPlan }) {
       <p className="mt-5 flex min-h-7 items-center gap-2.5 text-lg font-medium">
         {subject ? <><Dot color={subject.color} size={9} />{subject.name}</> : <span className="text-ink2">Sem matéria</span>}
       </p>
-      <p className="min-h-5 text-sm text-ink2">{block?.title ?? (block ? `${fmtDuration(block.minutes)} planejados` : '')}</p>
+      <p className="min-h-5 text-sm text-ink2">{item?.label ?? (item ? `${fmtDuration(item.minutes)} planejados` : '')}</p>
 
       {showCustom && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -88,7 +98,7 @@ export function FocusCard({ app, plan }: { app: ReadyApp; plan: TodayPlan }) {
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
         {idle && (suggested && !showCustom
-          ? <button className="btn" onClick={() => api.begin({ durationMin: suggested.minutes, subjectId: suggested.subject_id, blockId: suggested.id })}><Play size={15} aria-hidden /> Iniciar {fmtDuration(suggested.minutes)}</button>
+          ? <button className="btn" onClick={() => api.begin(beginArgs(suggested))}><Play size={15} aria-hidden /> Iniciar {fmtDuration(suggested.minutes)}</button>
           : <button className="btn" onClick={api.start}><Play size={15} aria-hidden /> Iniciar {fmtDuration(t.durationMin)}</button>)}
         {running && !finished && <button className="btn" onClick={api.pause}><Pause size={15} aria-hidden /> Pausar</button>}
         {t.status === 'paused' && !finished && <button className="btn" onClick={api.start}><Play size={15} aria-hidden /> Retomar</button>}
@@ -118,42 +128,42 @@ const box = 'grid shrink-0 place-items-center border border-ink3 text-transparen
 
 export function PlanCard({ app, plan }: { app: ReadyApp; plan: TodayPlan }) {
   const { study, today, timer, open } = app
-  const { subjects, logs, tasks } = study
-  const todayLogs = logs.rows.filter((l) => l.studied_on === today)
+  const { subjects, tasks } = study
   const urgent = urgentTasks(tasks.rows, today)
   const shown = urgent.slice(0, 4)
-
-  const complete = (b: Block) => logs.insert({ subject_id: b.subject_id, block_id: b.id, studied_on: today, minutes: b.minutes }, 'registrar o bloco')
-  const undo = async (b: Block) => { for (const l of todayLogs.filter((x) => x.block_id === b.id)) await logs.remove(l.id, 'desfazer o registro') }
 
   return (
     <section aria-labelledby="hoje" className="sheet flex flex-col p-6 md:p-8">
       <PanelTitle id="hoje" title="Hoje" aside={plan.planned > 0 ? <p className="tnum text-sm text-ink2">{fmtDuration(plan.studied)} de {fmtDuration(plan.planned)}</p> : undefined} />
 
-      {plan.blocks.length === 0 ? (
+      {plan.items.length === 0 ? (
         <p className="text-sm text-ink2">
-          Nenhum bloco para hoje.
+          Nada planejado para hoje.
           <button className="btn-quiet ml-1 !px-1.5 underline" onClick={() => open({ k: 'block', weekday: weekdayIndex(app.date) })}>Criar um bloco</button>
         </p>
       ) : (
         <ul className="divide-y divide-rule border-y border-rule">
-          {plan.blocks.map((b) => {
-            const done = plan.doneMin(b) > 0
-            const isNow = plan.pointer.current === b.id
-            const name = subjectName(subjects.rows, b.subject_id) ?? b.title ?? 'Bloco livre'
+          {plan.items.map((i) => {
+            const isNow = plan.pointer.current === i.id
+            const subject = subjectName(subjects.rows, i.subject_id)
+            const name = shortName(subject) ?? i.label ?? 'Bloco livre'
             const busy = timer.timer.status !== 'idle'
             return (
-              <li key={b.id} className="group flex items-center gap-3 py-3">
-                <button role="checkbox" aria-checked={done} onClick={() => (done ? undo(b) : complete(b))} aria-label={`${done ? 'Desfazer' : 'Marcar como feito'}: ${name}`}
-                  className={`${box} size-5 rounded ${done ? '!border-ok !bg-ok !text-paper' : ''}`}><Check size={13} strokeWidth={3} aria-hidden /></button>
-                <span className="tnum w-11 shrink-0 text-sm text-ink2">{hhmm(b.start_time)}</span>
-                <Dot color={subjectColor(subjects.rows, b.subject_id)} size={8} />
-                <span className={`min-w-0 flex-1 truncate ${done ? 'text-ink3 line-through' : 'font-medium'}`}>{name}</span>
-                {isNow && !done && <span className="now">Agora</span>}
-                <span className="tnum shrink-0 text-sm text-ink2">{fmtDuration(b.minutes)}</span>
-                {!done && !busy && (
+              <li key={i.id} className="group flex items-start gap-3 py-3">
+                <button role="checkbox" aria-checked={i.done} onClick={() => (i.done ? undoItem(study, i, today) : completeItem(study, i, today))} aria-label={`${i.done ? 'Desfazer' : 'Marcar como feito'}: ${name}`}
+                  className={`${box} mt-0.5 size-5 rounded ${i.done ? '!border-ok !bg-ok !text-paper' : ''}`}><Check size={13} strokeWidth={3} aria-hidden /></button>
+                <span className="tnum mt-0.5 w-11 shrink-0 text-sm text-ink2">{hhmm(i.start_time)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className={`flex items-center gap-2 ${i.done ? 'text-ink3 line-through' : 'font-medium'}`}>
+                    <Dot color={subjectColor(subjects.rows, i.subject_id)} size={8} /><span className="truncate">{name}</span>
+                  </span>
+                  {subject && i.label && <span className={`mt-0.5 block text-sm leading-snug ${i.done ? 'text-ink3' : 'text-ink2'}`}>{i.label}</span>}
+                </span>
+                {isNow && !i.done && <span className="now mt-0.5">Agora</span>}
+                <span className="tnum mt-0.5 shrink-0 text-sm text-ink2">{fmtDuration(i.minutes)}</span>
+                {!i.done && !busy && (
                   <button className="btn-quiet !px-2 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
-                    onClick={() => timer.begin({ durationMin: b.minutes, subjectId: b.subject_id, blockId: b.id })} aria-label={`Iniciar o foco: ${name}`}><Play size={13} aria-hidden /></button>
+                    onClick={() => timer.begin(beginArgs(i))} aria-label={`Iniciar o foco: ${name}`}><Play size={13} aria-hidden /></button>
                 )}
               </li>
             )
@@ -195,7 +205,7 @@ export function WeekStrip({ app }: { app: ReadyApp }) {
   const { study, today, date } = app
   const days = weekDays(date)
   const done = minutesByDay(study.logs.rows, days)
-  const planned = days.map((_, i) => blocksOfDay(study.blocks.rows, i).reduce((n, b) => n + b.minutes, 0))
+  const planned = days.map((d) => agendaForDay(d, study.blocks.rows, study.sessions.rows, study.logs.rows).reduce((n, i) => n + i.minutes, 0))
   const totalPlanned = planned.reduce((a, b) => a + b, 0)
   const totalDone = done.reduce((a, b) => a + b, 0)
 
@@ -227,12 +237,18 @@ export function WeekStrip({ app }: { app: ReadyApp }) {
 export function GoalsCard({ app }: { app: ReadyApp }) {
   const { study, today, date } = app
   const year = yearProgress(today)
+  const { exam_date: examDate, exam_name: examName } = study.settings
+  const toExam = daysToExam(today, examDate)
+  const examMode = toExam !== null
   const bySubject = minutesBySubject(study.logs.rows, weekDays(date))
-  const list = [...study.subjects.rows].sort((a, b) => Number(b.priority) - Number(a.priority) || a.name.localeCompare(b.name, 'pt-BR')).slice(0, 3)
+  const list = [...study.subjects.rows].sort((a, b) => Number(b.priority) - Number(a.priority) || (examMode ? b.weekly_goal_min - a.weekly_goal_min : 0) || a.name.localeCompare(b.name, 'pt-BR')).slice(0, examMode ? 5 : 3)
 
   return (
     <section aria-labelledby="rumo" className="sheet p-6 md:p-8">
-      <PanelTitle id="rumo" title={`Rumo a ${GOAL_YEAR}`} aside={year ? <span className="chip tnum">{year.kind === 'before' ? `${year.days} ${year.days === 1 ? 'dia' : 'dias'}` : `Dia ${year.day} de ${year.of}`}</span> : undefined} />
+      <PanelTitle id="rumo" title={examMode ? `Rumo à prova${examName ? `, ${examName}` : ''}` : `Rumo a ${GOAL_YEAR}`}
+        aside={examMode
+          ? <span className="chip tnum">{toExam === 0 ? 'É hoje' : `${toExam} ${toExam === 1 ? 'dia' : 'dias'}`}</span>
+          : year ? <span className="chip tnum">{year.kind === 'before' ? `${year.days} ${year.days === 1 ? 'dia' : 'dias'}` : `Dia ${year.day} de ${year.of}`}</span> : undefined} />
       {list.length === 0 ? (
         <p className="text-sm text-ink2">Cadastre suas matérias para acompanhar o progresso aqui.</p>
       ) : (
@@ -250,7 +266,7 @@ export function GoalsCard({ app }: { app: ReadyApp }) {
                   <div className="h-full" style={{ width: `${pct}%`, background: s.color, transition: 'width .4s' }} />
                 </div>
                 <p className="tnum mt-1.5 text-xs text-ink2">
-                  {s.total_lessons ? `${s.watched_lessons} de ${s.total_lessons} aulas` : 'Sem total de aulas'}
+                  {s.total_lessons ? `${s.watched_lessons} de ${s.total_lessons} ${s.total_lessons === 1 ? 'aula' : 'aulas'}` : 'Sem total de aulas'}
                   {s.weekly_goal_min > 0 && `. Semana: ${fmtDuration(week)} de ${fmtDuration(s.weekly_goal_min)}`}
                 </p>
               </li>

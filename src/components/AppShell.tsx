@@ -94,7 +94,7 @@ export function AppShell({ email, children }: { email?: string; children: React.
           <Brand />
           <div className="flex items-center gap-2"><TimerChip compact /><button onClick={signOut} className="btn-quiet">Sair</button></div>
         </div>
-        <main id="conteudo" className="mx-auto w-full max-w-5xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-7 md:px-12 md:pb-24 md:pt-14">
+        <main id="conteudo" className="mx-auto w-full max-w-6xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-7 md:px-12 md:pb-24 md:pt-14">
           {study.error && <div className="mb-6"><Alert action={<button className="underline" onClick={study.clearError}>Dispensar</button>}>{study.error}</Alert></div>}
           {children}
         </main>

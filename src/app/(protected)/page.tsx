@@ -4,7 +4,7 @@ import { FocusCard, GoalsCard, PlanCard, WeekStrip, sentence, todayPlan } from '
 import { Skeleton } from '@/components/Skeleton'
 import { useReadyApp } from '@/contexts/app'
 import { isoWeek, longDate } from '@/lib/dates'
-import { GOAL_YEAR, STARTER_PLAN, yearProgress } from '@/lib/study'
+import { GOAL_YEAR, STARTER_PLAN, daysToExam, yearProgress } from '@/lib/study'
 
 export default function Home() {
   const app = useReadyApp()
@@ -30,19 +30,21 @@ export default function Home() {
 
   const week = isoWeek(app.date)
   const year = yearProgress(app.today)
+  const toExam = daysToExam(app.today, study.settings.exam_date)
 
   return (
     <div className="space-y-8">
       <header className="mb-4">
         <h1 className="font-display text-3xl font-normal leading-tight md:text-[2.5rem]">{sentence(longDate(app.date))}</h1>
         <p className="mt-2 text-ink2">
-          Semana {week.week} de {week.year}.{year?.kind === 'before' ? ` Faltam ${year.days} ${year.days === 1 ? 'dia' : 'dias'} para ${GOAL_YEAR}.` : ''}
+          Semana {week.week} de {week.year}.{toExam !== null ? (toExam === 0 ? ` A prova é hoje.` : ` Faltam ${toExam} ${toExam === 1 ? 'dia' : 'dias'} para a prova${study.settings.exam_name ? ` (${study.settings.exam_name})` : ''}.`) : year?.kind === 'before' ? ` Faltam ${year.days} ${year.days === 1 ? 'dia' : 'dias'} para ${GOAL_YEAR}.` : ''}
         </p>
       </header>
 
       {empty && (
         <div className="sheet flex flex-wrap items-center gap-4 p-5">
-          <p className="min-w-60 flex-1 text-sm text-ink2"><b className="font-semibold text-ink">Comece pelo plano de 2027.</b> Cria Inglês e Azure com metas semanais e blocos de segunda a domingo. Você ajusta tudo depois.</p>
+          <p className="min-w-60 flex-1 text-sm text-ink2"><b className="font-semibold text-ink">Comece por um plano.</b> Importe um cronograma em markdown ou crie o plano inicial (Inglês e Azure, com blocos de segunda a domingo). Você ajusta tudo depois.</p>
+          <button className="btn-ghost" onClick={() => app.open({ k: 'import' })}>Importar cronograma</button>
           <button className="btn" onClick={startPlan} disabled={seeding}>{seeding ? 'Criando…' : 'Criar plano inicial'}</button>
         </div>
       )}

@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useEffect, useState } from 'react'
-import { BlockForm, LinkForm, LogForm, SubjectForm, TaskForm } from '@/components/forms'
+import { BlockForm, LinkForm, LogForm, SessionForm, SubjectForm, TaskForm } from '@/components/forms'
+import { ImportPlan } from '@/components/ImportPlan'
 import type { Dialog, OpenDialog } from '@/components/dialogs'
 import { useNow } from '@/hooks/useNow'
 import { useStudy, type Study } from '@/hooks/useStudy'
@@ -31,7 +32,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => { document.title = 'EstudAI' }
   }, [now, t])
 
-  const { subjects, tasks, blocks, links, logs } = study
+  const { subjects, tasks, blocks, links, logs, sessions } = study
   return (
     <Ctx.Provider value={{ study, timer, now, open: setDialog }}>
       {children}
@@ -55,6 +56,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           onSave={async (v) => (dialog.item ? links.patch(dialog.item.id, v) : !!(await links.insert(v)))}
           onDelete={dialog.item && (() => links.remove(dialog.item!.id))} />
       )}
+      {dialog?.k === 'session' && (
+        <SessionForm initial={dialog.item} subjects={subjects.rows} onClose={close}
+          onSave={(v) => sessions.patch(dialog.item.id, v)}
+          onDelete={() => sessions.remove(dialog.item.id)} />
+      )}
+      {dialog?.k === 'import' && <ImportPlan study={study} onClose={close} />}
       {dialog?.k === 'log' && (
         <LogForm subjects={subjects.rows} defaultSubject={dialog.subject} onClose={close} onSave={async (v) => !!(await logs.insert(v, 'registrar o tempo'))} />
       )}

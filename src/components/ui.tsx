@@ -58,6 +58,8 @@ export function Dot({ color, size = 10 }: { color: string; size?: number }) {
 
 export const subjectColor = (subjects: Subject[], id: string | null) => subjects.find((s) => s.id === id)?.color ?? 'var(--ink3)'
 export const subjectName = (subjects: Subject[], id: string | null) => subjects.find((s) => s.id === id)?.name ?? null
+/** Nome curto para espaços apertados: “P3 — Desenvolvimento de Sistemas” vira “P3”. */
+export const shortName = (name: string | null) => (name && name.includes(' — ') ? name.split(' — ')[0] : name)
 
 export function SubjectSelect({ subjects, value, onChange, none = 'Sem matéria' }: { subjects: Subject[]; value: string | null; onChange: (v: string | null) => void; none?: string }) {
   return (

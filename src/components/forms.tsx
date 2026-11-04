@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Field, Modal, SUBJECT_COLORS, SubjectSelect, hoursToMinutes, minutesToHours } from '@/components/ui'
 import { WEEKDAYS, hhmm, ymd } from '@/lib/dates'
-import { LINK_KINDS, LINK_LABEL, type Block, type LinkItem, type LinkKind, type StudyLog, type Subject, type Task } from '@/lib/types'
+import { LINK_KINDS, LINK_LABEL, type Block, type LinkItem, type LinkKind, type PlanSession, type StudyLog, type Subject, type Task } from '@/lib/types'
 
 /** Rodapé padrão dos formulários: excluir (se for edição) à esquerda, cancelar e salvar à direita. */
 function Actions({ busy, onCancel, onDelete, save = 'Salvar' }: { busy: boolean; onCancel: () => void; onDelete?: () => void; save?: string }) {
@@ -164,6 +164,29 @@ export function LogForm({ subjects, defaultSubject, onSave, onClose }: { subject
         </div>
         <Field label="O que você estudou"><input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Opcional" /></Field>
         <Actions busy={busy} onCancel={onClose} save="Registrar" />
+      </form>
+    </Modal>
+  )
+}
+
+export function SessionForm({ initial, subjects, onSave, onDelete, onClose }: FormProps<PlanSession> & { initial: PlanSession; subjects: Subject[] }) {
+  const [topic, setTopic] = useState(initial.topic)
+  const [subject, setSubject] = useState<string | null>(initial.subject_id)
+  const [day, setDay] = useState(initial.planned_on)
+  const [time, setTime] = useState(hhmm(initial.start_time))
+  const [minutes, setMinutes] = useState(String(initial.minutes))
+  const { busy, submit, run } = useSubmit(() => onSave({ topic: topic.trim(), subject_id: subject, planned_on: day, start_time: time, minutes: Math.min(720, Math.max(5, num(minutes, 60))) }), onClose)
+  return (
+    <Modal title="Editar sessão" onClose={onClose}>
+      <form onSubmit={submit} className="space-y-3.5">
+        <Field label="Conteúdo"><input className="input" required value={topic} onChange={(e) => setTopic(e.target.value)} /></Field>
+        <Field label="Matéria"><SubjectSelect subjects={subjects} value={subject} onChange={setSubject} /></Field>
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Dia"><input className="input" type="date" required value={day} onChange={(e) => setDay(e.target.value)} /></Field>
+          <Field label="Início"><input className="input tnum" type="time" required value={time} onChange={(e) => setTime(e.target.value)} /></Field>
+          <Field label="Minutos"><input className="input tnum" inputMode="numeric" value={minutes} onChange={(e) => setMinutes(e.target.value.replace(/\D/g, ''))} /></Field>
+        </div>
+        <Actions busy={busy} onCancel={onClose} onDelete={onDelete && (() => run(onDelete))} />
       </form>
     </Modal>
   )

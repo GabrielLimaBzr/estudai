@@ -58,7 +58,7 @@ export const blockMinutesDone = (block: Block, date: string, logs: StudyLog[]) =
 
 export interface NowPointer { current: string | null; next: string | null }
 /** Qual bloco do dia está rolando agora e qual é o próximo (ignora os já concluídos). */
-export function nowPointer(blocks: Block[], nowMin: number, isDone: (b: Block) => boolean): NowPointer {
+export function nowPointer<T extends { id: string; start_time: string; minutes: number }>(blocks: T[], nowMin: number, isDone: (b: T) => boolean): NowPointer {
   let current: string | null = null, next: string | null = null
   for (const b of blocks) {
     if (isDone(b)) continue
@@ -124,4 +124,11 @@ export const STARTER_PLAN = {
     { key: 'azure', weekday: 5, start_time: '10:45', minutes: 120 },
     { key: 'ingles', weekday: 6, start_time: '10:00', minutes: 60 },
   ],
+}
+
+/** Prova-alvo: dias que faltam (0 = é hoje). `null` se não há prova ou ela já passou. */
+export function daysToExam(today: string, examDate: string | null): number | null {
+  if (!examDate) return null
+  const d = daysBetween(today, examDate)
+  return d >= 0 ? d : null
 }

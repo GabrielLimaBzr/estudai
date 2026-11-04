@@ -6,6 +6,7 @@ export interface TimerState {
   elapsedMs: number // acumulado antes do último início
   subjectId: string | null
   blockId: string | null
+  sessionId?: string | null // sessão do cronograma em andamento
 }
 
 export const IDLE_TIMER: TimerState = { status: 'idle', durationMin: 50, startedAt: 0, elapsedMs: 0, subjectId: null, blockId: null }
@@ -19,11 +20,12 @@ export const timerFraction = (t: TimerState, now: number) => (t.durationMin > 0 
 /** Minutos a registrar ao encerrar: o tempo corrido (arredondado), no mínimo 1 e no máximo a duração. */
 export const minutesToLog = (t: TimerState, now: number) => Math.max(1, Math.min(t.durationMin, Math.round(elapsedMs(t, now) / 60_000)))
 
-/** 'mm:ss' do tempo que falta (arredonda segundos para cima, para não mostrar 00:00 antes da hora). */
+/** 'mm:ss' (ou 'h:mm:ss' a partir de 1h) do tempo que falta (arredonda segundos para cima, para não mostrar 00:00 antes da hora). */
 export function fmtClock(ms: number): string {
   const total = Math.ceil(ms / 1000)
-  const m = Math.floor(total / 60), s = total % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60
+  const mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0')
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
 }
 
 export const start = (t: TimerState, now: number): TimerState => ({ ...t, status: 'running', startedAt: now })

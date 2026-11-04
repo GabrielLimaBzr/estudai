@@ -13,7 +13,7 @@ npm run dev
 npm test
 ```
 
-Banco: rode `supabase/migrations/0001_init.sql` no SQL Editor. As tabelas (`subjects`, `tasks`, `blocks`, `study_log`, `links`, `settings`) não conflitam com as das outras apps, então pode reutilizar o mesmo projeto Supabase.
+Banco: rode `supabase/migrations/0001_init.sql` e depois `0002_plan.sql` (cronograma com datas e prova) no SQL Editor. As tabelas (`subjects`, `tasks`, `blocks`, `study_log`, `links`, `settings`) não conflitam com as das outras apps, então pode reutilizar o mesmo projeto Supabase.
 
 ## O painel
 
@@ -28,6 +28,17 @@ Menu lateral só com texto e cinco páginas. A Home mostra só o essencial; o de
 | **Metas** | Horas da semana contra a meta, meta por matéria, sequência de dias e a frase da semana. |
 
 O cronômetro continua ao trocar de página e aparece no menu. Primeiro acesso: **Criar plano inicial** cadastra Inglês e Azure com metas semanais e blocos de segunda a domingo. Tudo é editável.
+
+## Importar um cronograma (concurso, curso)
+
+Em **Semana → Importar cronograma**, cole o markdown (ou escolha o `.md`). Ele cria as matérias, as sessões com data e a contagem para a prova. O leitor entende:
+
+- uma tabela de sessões com colunas **Data | Horário | Disciplina | Conteúdo**, como `| 05/11 (qui.) | 20h–22h | P3 — Java | Tipos, variáveis… |` (horário também como `20:00–22:00`);
+- `**Período:** 05/11/2026 a 12/12/2026` (dá o ano das datas) e `**Prova:** 13/12/2026`;
+- `**Carga horária semanal:** 14 horas` (vira a meta semanal) e uma tabela `| P1 | Conhecimentos básicos | 2h |` (vira a meta de cada matéria);
+- o título `# Cronograma de Estudos — CGU 2026` (vira o nome da prova).
+
+Cada sessão aparece em Hoje, no Foco e na Semana. Concluir uma sessão (pelo visto ou pelo cronômetro) registra o tempo e conta mais uma aula na matéria. Reimportar substitui o cronograma atual. Exemplo completo em `tests/fixtures/cgu.md`.
 
 ## Design
 

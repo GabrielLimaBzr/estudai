@@ -1,17 +1,19 @@
 'use client'
 import { useState } from 'react'
-import { Check, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
-import { Dot, PageHeader, subjectColor, subjectName } from '@/components/ui'
+import { Check, ChevronLeft, ChevronRight, FileUp, Plus } from 'lucide-react'
+import { Dot, PageHeader, shortName, subjectColor, subjectName } from '@/components/ui'
 import type { ReadyApp } from '@/contexts/app'
 import { WEEKDAYS, WEEKDAYS_SHORT, addDays, fmtDuration, hhmm, parseYmd, shortDay, weekDays } from '@/lib/dates'
-import { blockMinutesDone, blocksOfDay, minutesByDay } from '@/lib/study'
+import { agendaForDay } from '@/lib/agenda'
+import { minutesByDay } from '@/lib/study'
 
 export function Week({ app }: { app: ReadyApp }) {
   const { study, today, open } = app
   const [offset, setOffset] = useState(0)
   const days = weekDays(addDays(parseYmd(today), offset * 7))
-  const { subjects, blocks, logs } = study
-  const planned = blocks.rows.reduce((n, b) => n + b.minutes, 0)
+  const { subjects, blocks, logs, sessions } = study
+  const agenda = days.map((d) => agendaForDay(d, blocks.rows, sessions.rows, logs.rows))
+  const planned = agenda.flat().reduce((n, i) => n + i.minutes, 0)
   const doneByDay = minutesByDay(logs.rows, days)
   const done = doneByDay.reduce((a, b) => a + b, 0)
   const first = parseYmd(days[0]), last = parseYmd(days[6])
@@ -27,6 +29,7 @@ export function Week({ app }: { app: ReadyApp }) {
             <button onClick={() => setOffset(0)} disabled={offset === 0} className="disabled:opacity-40">Hoje</button>
             <button onClick={() => setOffset((o) => o + 1)} aria-label="Próxima semana" className="grid place-items-center !px-2"><ChevronRight size={16} aria-hidden /></button>
           </div>
+          <button className="btn-ghost" onClick={() => open({ k: 'import' })}><FileUp size={15} aria-hidden /> Importar cronograma</button>
           <button className="btn-ghost" onClick={() => open({ k: 'block' })}><Plus size={16} aria-hidden /> Bloco</button>
         </>} />
 
@@ -34,7 +37,7 @@ export function Week({ app }: { app: ReadyApp }) {
         {days.map((day, i) => {
           const isToday = day === today
           const past = day < today
-          const dayBlocks = blocksOfDay(blocks.rows, i)
+          const dayBlocks = agenda[i]
           const plannedDay = dayBlocks.reduce((n, b) => n + b.minutes, 0)
           return (
             <section key={day} aria-label={`${WEEKDAYS[i]}, ${parseYmd(day).getDate()}`}
@@ -45,20 +48,24 @@ export function Week({ app }: { app: ReadyApp }) {
               </div>
               <ul className="flex flex-1 flex-col gap-1">
                 {dayBlocks.map((b) => {
-                  const ok = blockMinutesDone(b, day, logs.rows) > 0
+                  const ok = b.done
                   const missed = past && !ok
+                  const edit = () => {
+                    if (b.kind === 'session') { const sess = sessions.rows.find((x) => x.id === b.refId); if (sess) open({ k: 'session', item: sess }) }
+                    else { const blk = blocks.rows.find((x) => x.id === b.refId); if (blk) open({ k: 'block', item: blk }) }
+                  }
                   return (
                     <li key={b.id}>
-                      <button onClick={() => open({ k: 'block', item: b })} className={`w-full rounded-md border border-transparent p-2 text-left transition-colors hover:border-rule hover:bg-sheet ${missed ? 'opacity-50' : ''}`}>
+                      <button onClick={edit} className={`w-full rounded-md border border-transparent p-2 text-left transition-colors hover:border-rule hover:bg-sheet ${missed ? 'opacity-50' : ''}`}>
                         <span className="flex items-center justify-between gap-2">
                           <span className="tnum text-xs text-ink2">{hhmm(b.start_time)} · {fmtDuration(b.minutes)}</span>
                           {ok && <Check size={13} strokeWidth={3} className="text-ok" aria-label="Feito" />}
                         </span>
                         <span className={`mt-1 flex items-center gap-2 text-sm font-medium leading-snug ${ok ? 'text-ink3 line-through' : ''}`}>
                           <Dot color={subjectColor(subjects.rows, b.subject_id)} size={8} />
-                          <span className="min-w-0 truncate">{subjectName(subjects.rows, b.subject_id) ?? b.title ?? 'Bloco livre'}</span>
+                          <span className="min-w-0 truncate">{shortName(subjectName(subjects.rows, b.subject_id)) ?? b.label ?? 'Bloco livre'}</span>
                         </span>
-                        {b.title && b.subject_id && <span className="mt-0.5 block truncate pl-4 text-xs text-ink2">{b.title}</span>}
+                        {b.label && b.subject_id && <span className="mt-0.5 line-clamp-4 block break-words pl-4 text-xs leading-snug text-ink2">{b.label}</span>}
                       </button>
                     </li>
                   )

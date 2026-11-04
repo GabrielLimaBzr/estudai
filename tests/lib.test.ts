@@ -111,5 +111,7 @@ describe('cronômetro', () => {
     expect(fmtClock(25 * 60_000)).toBe('25:00')
     expect(fmtClock(1)).toBe('00:01')
     expect(fmtClock(0)).toBe('00:00')
+    expect(fmtClock(120 * 60_000)).toBe('2:00:00')
+    expect(fmtClock(59 * 60_000 + 1000)).toBe('59:01')
   })
 })
