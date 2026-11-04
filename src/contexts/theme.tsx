@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 export type ThemePref = 'system' | 'light' | 'dark'
 type Mode = 'light' | 'dark'
 const KEY = 'estudai:theme'
-const META = { dark: '#0d1424', light: '#eef1f8' } as const
+const META = { dark: '#0d1219', light: '#f6f7f9' } as const
 
 const Ctx = createContext<{ pref: ThemePref; setPref: (p: ThemePref) => void }>({ pref: 'system', setPref: () => {} })
 export const useTheme = () => useContext(Ctx)

@@ -1,10 +1,10 @@
-/** Esqueleto de carregamento: mantém a forma do painel em vez de um “Carregando…”. */
+/** Esqueleto de carregamento: mantém a forma da página em vez de um “Carregando…”. */
 export function Skeleton() {
-  const block = 'animate-pulse rounded-2xl bg-sunk'
+  const block = 'animate-pulse rounded-lg bg-sunk'
   return (
-    <div role="status" aria-label="Carregando" className="space-y-10">
-      <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr]"><div className={`${block} h-96`} /><div className={`${block} h-96 rounded-[28px]`} /></div>
-      <div className={`${block} h-72`} />
+    <div role="status" aria-label="Carregando" className="space-y-8">
+      <div className={`${block} h-12 w-72`} />
+      <div className="grid gap-6 lg:grid-cols-2"><div className={`${block} h-[28rem]`} /><div className={`${block} h-[28rem]`} /></div>
       <span className="sr-only">Carregando…</span>
     </div>
   )

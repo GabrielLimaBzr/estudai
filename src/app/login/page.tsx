@@ -82,8 +82,8 @@ export default function LoginPage() {
     return (
       <AuthShell>
         <div className="space-y-3 text-center">
-          <span className="mx-auto grid size-14 place-items-center rounded-full bg-marker text-on-marker"><MailCheck size={28} aria-hidden /></span>
-          <h1 className="text-xl font-semibold">Confirme o seu e-mail</h1>
+          <span className="mx-auto grid size-12 place-items-center rounded-md bg-accent text-on-accent"><MailCheck size={28} aria-hidden /></span>
+          <h1 className="font-display text-2xl">Confirme o seu e-mail</h1>
           <p className="text-sm text-ink2">Enviamos um link para <b className="text-ink">{sentTo}</b>. Abra o e-mail, toque no link e volte aqui para entrar. Se não achar, veja o spam.</p>
         </div>
         <button className="btn w-full" onClick={() => { setSentTo(null); switchMode('in'); setPassword('') }}>Já confirmei, entrar</button>
@@ -97,7 +97,7 @@ export default function LoginPage() {
       <header className="flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icon-192.png" alt="" width={40} height={40} className="size-10 rounded-xl" />
-        <div><h1 className="text-xl font-semibold leading-tight">EstudAI</h1><p className="text-sm text-ink2">{t.title}</p></div>
+        <div><h1 className="font-display text-2xl font-semibold leading-tight">EstudAI</h1><p className="text-sm text-ink2">{t.title}</p></div>
       </header>
 
       <div className="seg grid grid-cols-2" role="tablist" aria-label="Entrar ou criar conta">

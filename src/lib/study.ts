@@ -110,8 +110,8 @@ export function yearProgress(today: string, year = GOAL_YEAR): YearProgress {
 /** Matérias e blocos sugeridos para começar o plano do ano: Inglês + Azure. Tudo editável depois. */
 export const STARTER_PLAN = {
   subjects: [
-    { key: 'ingles', name: 'Inglês', area: 'Idiomas', color: '#ff6f61', weekly_goal_min: 300, review_every_days: 7, priority: true },
-    { key: 'azure', name: 'Azure', area: 'Certificação', color: '#2f8cff', weekly_goal_min: 360, review_every_days: 14, priority: true },
+    { key: 'ingles', name: 'Inglês', area: 'Idiomas', color: '#b0566b', weekly_goal_min: 300, review_every_days: 7, priority: true },
+    { key: 'azure', name: 'Azure', area: 'Certificação', color: '#4a7ab8', weekly_goal_min: 360, review_every_days: 14, priority: true },
   ],
   // weekday: 0 = segunda … 6 = domingo
   blocks: [

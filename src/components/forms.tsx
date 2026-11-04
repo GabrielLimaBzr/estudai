@@ -33,7 +33,7 @@ const num = (v: string, fallback = 0) => { const n = parseInt(v, 10); return Num
 export function SubjectForm({ initial, onSave, onDelete, onClose }: FormProps<Subject>) {
   const [name, setName] = useState(initial?.name ?? '')
   const [area, setArea] = useState(initial?.area ?? '')
-  const [color, setColor] = useState(initial?.color ?? SUBJECT_COLORS[1])
+  const [color, setColor] = useState(initial?.color ?? SUBJECT_COLORS[0])
   const [total, setTotal] = useState(String(initial?.total_lessons ?? ''))
   const [watched, setWatched] = useState(String(initial?.watched_lessons ?? 0))
   const [goal, setGoal] = useState(minutesToHours(initial?.weekly_goal_min ?? 0))
@@ -53,7 +53,7 @@ export function SubjectForm({ initial, onSave, onDelete, onClose }: FormProps<Su
           <div className="flex gap-2">
             {SUBJECT_COLORS.map((c) => (
               <button key={c} type="button" onClick={() => setColor(c)} aria-label={`Cor ${c}`} aria-pressed={color === c}
-                className="size-8 rounded-full ring-offset-2 ring-offset-sheet aria-pressed:ring-2 aria-pressed:ring-ink" style={{ background: c }} />
+                className="size-7 rounded ring-offset-2 ring-offset-sheet aria-pressed:ring-2 aria-pressed:ring-ink" style={{ background: c }} />
             ))}
           </div>
         </div>

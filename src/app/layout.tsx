@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
-import '@fontsource-variable/figtree'
-import '@fontsource-variable/bricolage-grotesque'
+import '@fontsource-variable/public-sans'
+import '@fontsource-variable/source-serif-4'
 import './globals.css'
 import { THEME_INIT_SCRIPT, ThemeProvider } from '@/contexts/theme'
 
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#eef1f8' },
-    { media: '(prefers-color-scheme: dark)', color: '#0d1424' },
+    { media: '(prefers-color-scheme: light)', color: '#f6f7f9' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d1219' },
   ],
   width: 'device-width',
   initialScale: 1,

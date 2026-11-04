@@ -17,10 +17,10 @@ export function Modal({ title, onClose, children, wide = false }: { title: strin
   }, [onClose])
   return (
     <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <div className="fade-in absolute inset-0 bg-black/55" onClick={onClose} />
-      <div ref={box} className={`pop-in sheet relative max-h-[92dvh] w-full overflow-y-auto rounded-b-none p-5 sm:rounded-2xl sm:rounded-b-2xl ${wide ? 'sm:max-w-xl' : 'sm:max-w-md'}`} style={{ boxShadow: 'var(--shadow-float)' }}>
+      <div className="fade-in absolute inset-0 bg-black/45" onClick={onClose} />
+      <div ref={box} className={`pop-in sheet relative max-h-[92dvh] w-full overflow-y-auto rounded-b-none p-6 sm:rounded-lg ${wide ? 'sm:max-w-xl' : 'sm:max-w-md'}`} style={{ boxShadow: 'var(--shadow-float)' }}>
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 id={titleId} className="text-lg font-semibold">{title}</h2>
+          <h2 id={titleId} className="font-display text-xl font-medium">{title}</h2>
           <button type="button" data-close onClick={onClose} aria-label="Fechar" className="btn-quiet -mr-2 size-9 !p-0"><X size={18} aria-hidden /></button>
         </div>
         {children}
@@ -39,21 +39,21 @@ export function Field({ label, hint, children, className = '' }: { label: string
   )
 }
 
-/** Cabeçalho de seção: título + resumo curto à esquerda, ações à direita. */
-export function SectionHead({ id, title, summary, actions }: { id?: string; title: string; summary?: React.ReactNode; actions?: React.ReactNode }) {
+/** Cabeçalho de página: título grande, uma linha de apoio e ações à direita. */
+export function PageHeader({ title, summary, actions }: { title: string; summary?: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+    <header className="mb-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-rule pb-6">
       <div className="min-w-0">
-        <h2 id={id} className="text-2xl font-semibold leading-tight">{title}</h2>
-        {summary && <p className="mt-0.5 text-sm text-ink2">{summary}</p>}
+        <h1 className="font-display text-3xl font-normal leading-tight md:text-[2.5rem]">{title}</h1>
+        {summary && <p className="mt-1.5 text-ink2">{summary}</p>}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-1.5">{actions}</div>}
-    </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </header>
   )
 }
 
 export function Dot({ color, size = 10 }: { color: string; size?: number }) {
-  return <span aria-hidden className="inline-block shrink-0 rounded-full" style={{ width: size, height: size, background: color }} />
+  return <span aria-hidden className="inline-block shrink-0 rounded-[2px]" style={{ width: size, height: size, background: color }} />
 }
 
 export const subjectColor = (subjects: Subject[], id: string | null) => subjects.find((s) => s.id === id)?.color ?? 'var(--ink3)'
@@ -68,7 +68,7 @@ export function SubjectSelect({ subjects, value, onChange, none = 'Sem matéria'
   )
 }
 
-export const SUBJECT_COLORS = ['#ff6f61', '#2f8cff', '#3ccf9b', '#8b7bff', '#f0b23c', '#e85d9b'] as const
+export const SUBJECT_COLORS = ['#4a7ab8', '#b0566b', '#3d9488', '#b8892f', '#7a6bb5', '#6b7b92'] as const
 
 /** Meta em horas (aceita vírgula) → minutos; vazio = 0. */
 export function hoursToMinutes(v: string): number {

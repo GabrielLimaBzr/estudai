@@ -15,22 +15,23 @@ npm test
 
 Banco: rode `supabase/migrations/0001_init.sql` no SQL Editor. As tabelas (`subjects`, `tasks`, `blocks`, `study_log`, `links`, `settings`) não conflitam com as das outras apps, então pode reutilizar o mesmo projeto Supabase.
 
-## O painel (uma tela só)
+## O painel
 
-| Seção | O que faz |
+Menu lateral só com texto e cinco páginas. A Home mostra só o essencial; o detalhe fica nas outras.
+
+| Página | O que mostra |
 |---|---|
-| **Hoje** | Tarefas urgentes ou vencendo, blocos do dia com “Iniciar” e “Feito”. O bloco em andamento fica marcado em amarelo. |
-| **Foco** | Cronômetro (25/50/90 min) ligado a uma matéria. Ao encerrar, registra o tempo. Sobrevive a recarregar a página e mostra o tempo na aba. |
-| **Semana** | Grade segunda a domingo com blocos fixos (repetem toda semana), visto nos concluídos e navegação entre semanas. |
+| **Hoje** | **Foco** (cronômetro ligado a uma matéria, com o próximo bloco já sugerido), **Hoje** (blocos do dia e pendências), **Semana** em miniatura e **Rumo a 2027** (progresso das matérias prioritárias). |
+| **Semana** | Grade de segunda a domingo com blocos fixos (repetem toda semana), visto nos concluídos e navegação entre semanas. |
 | **Matérias** | Total de aulas, assistidas (+/−), % concluído e status de revisão espaçada (em dia, revisar em breve, atrasada). |
-| **Materiais** | Estante de PDFs, livros, cursos, vídeos e links, filtrável por tipo. |
-| **Metas** | Frase da semana (sugerida ou sua), horas brutas da semana vs. meta, meta por matéria, sequência de dias. |
+| **Materiais** | PDFs, livros, cursos, vídeos e links, filtráveis por tipo. |
+| **Metas** | Horas da semana contra a meta, meta por matéria, sequência de dias e a frase da semana. |
 
-Primeiro acesso: o botão **Criar plano inicial** cadastra Inglês e Azure com metas semanais e blocos de segunda a domingo. Tudo é editável.
+O cronômetro continua ao trocar de página e aparece no menu. Primeiro acesso: **Criar plano inicial** cadastra Inglês e Azure com metas semanais e blocos de segunda a domingo. Tudo é editável.
 
 ## Design
 
-“Mesa de estudo”: Tinta (escuro) e Papel (claro), cor por matéria, amarelo marca-texto reservado a um único significado, **agora**. Tipografia: Bricolage Grotesque (títulos e números) + Figtree (texto). Tokens em `src/app/globals.css`.
+Tom institucional: superfícies planas com borda de um fio, sem sombras, cantos de 6 a 8px, um único acento (azul-marinho no claro, azul-aço no escuro) e cores de matéria foscas só em pontos e barras finas. Títulos e números em Source Serif 4; interface em Public Sans. Tema claro (padrão), escuro ou automático. Tokens em `src/app/globals.css`.
 
 ## Estrutura
 
@@ -38,7 +39,8 @@ Primeiro acesso: o botão **Criar plano inicial** cadastra Inglês e Azure com m
 - `src/lib/timer.ts`: cronômetro por instantes (não por contagem)
 - `src/lib/dates.ts`: datas no fuso local, semana começando na segunda
 - `src/hooks/useStudy.ts`: dados (Supabase) · `useTimer.ts`: cronômetro persistido
-- `src/components/`: uma seção por arquivo (`Today`, `FocusTimer`, `Week`, `Subjects`, `Shelf`, `Insights`)
+- `src/contexts/app.tsx`: dados, relógio e cronômetro acima das páginas
+- `src/components/home.tsx`: painéis da Home · `Week`, `Subjects`, `Shelf`, `Insights`: uma página cada
 
 ## Próximos passos
 
