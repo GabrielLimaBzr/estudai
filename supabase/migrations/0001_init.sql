@@ -71,11 +71,21 @@ create table settings (
   quote_week text
 );
 
-do $$
-declare t text;
-begin
-  foreach t in array array['subjects', 'tasks', 'blocks', 'study_log', 'links', 'settings'] loop
-    execute format('alter table %I enable row level security', t);
-    execute format('create policy "own rows" on %I for all using (user_id = auth.uid()) with check (user_id = auth.uid())', t);
-  end loop;
-end $$;
+-- RLS: cada usuário só enxerga e altera as próprias linhas.
+alter table subjects enable row level security;
+create policy "own rows" on subjects for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+alter table tasks enable row level security;
+create policy "own rows" on tasks for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+alter table blocks enable row level security;
+create policy "own rows" on blocks for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+alter table study_log enable row level security;
+create policy "own rows" on study_log for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+alter table links enable row level security;
+create policy "own rows" on links for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+alter table settings enable row level security;
+create policy "own rows" on settings for all using (user_id = auth.uid()) with check (user_id = auth.uid());
